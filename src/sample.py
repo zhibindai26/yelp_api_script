@@ -3,11 +3,11 @@
 from __future__ import print_function
 
 import os
-import argparse
+import math
 import requests
 import sys
 import csv
-
+from datetime import datetime
 
 # This client code can run on Python 2.x or 3.x.  Your imports can be
 # simpler if you only need one of those.
@@ -71,7 +71,7 @@ class YelpFusion:
 
         return response.json()
 
-    def search(self):
+    def search(self, ):
         """Query the Search API by a search term and location.
 
         Returns:
@@ -87,8 +87,17 @@ class YelpFusion:
         }
         return self.request(self.SEARCH_PATH, url_params=url_params)
 
+    def query_api_count(self):
+        response = self.search()
+        total_results = response.get('total')
+        num_searches = int(math.ceil(total_results / 50.0))
+
+        if num_searches < 20:
+            return num_searches
+        else:
+            return 20
+
     def query_api(self):
-        """Queries the API by the input values from the user."""
         response = self.search()
         businesses = response.get('businesses')
 
@@ -100,27 +109,30 @@ class YelpFusion:
 
     def convert_to_list(self, dict_to_convert):
         final_list = []
+        item_ls = []
 
         for item in dict_to_convert:
-            item_ls = []
-            item_ls.append(str(item['name']))
-            item_ls.append(str(item['location']['address1']))
-            item_ls.append(str(item['location']['address2']))
-            item_ls.append(str(item['location']['city']))
-            item_ls.append(str(item['location']['state']))
-            item_ls.append(str(item['location']['zip_code']))
-            item_ls.append(str(item['display_phone']))
-            item_ls.append(str(item['rating']))
-            item_ls.append(str(item['review_count']))
-            item_ls.append(str(item['url']))
+            item_ls.append(item['name'].encode('utf-8').strip())
+            item_ls.append(item['categories'])
+            item_ls.append(str(item['location']['address1']).encode('utf-8').strip())
+            item_ls.append(str(item['location']['address2']).encode('utf-8').strip())
+            item_ls.append(item['location']['city'].encode('utf-8').strip())
+            item_ls.append(item['location']['state'].encode('utf-8').strip())
+            item_ls.append(item['location']['zip_code'].encode('utf-8').strip())
+            item_ls.append(item['display_phone'].encode('utf-8').strip())
+            item_ls.append(item['rating'])
+            item_ls.append(item['review_count'])
+            item_ls.append(item['url'].encode('utf-8').strip())
 
             final_list.append(item_ls)
+            item_ls = []
 
         self.write_csv(final_list)
 
     def write_csv(self, results_list):
         columns = [
             'name',
+            'categories',
             'address 1',
             'address 2',
             'city',
@@ -133,44 +145,49 @@ class YelpFusion:
         ]
         columns = [x.upper() for x in columns]
 
-        csv_file = self.term + ' ' + self.location + ' results.csv'
-        with open(csv_folder + csv_file, 'wb') as output:
+        today = datetime.today().strftime('%m-%d-%Y')
+        csv_file = self.term + '_' + self.location + '_' + today + '_results.csv'
+        with open(csv_folder + csv_file, 'ab') as output:
             result_writer = csv.writer(output, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            result_writer.writerow(columns)
+            if self.offset == 0:
+                result_writer.writerow(columns)
             for item in results_list:
                 result_writer.writerow(item)
 
 
-def main():
-    default_term = 'restaurants'
-    default_location = 'silver spring, md'
-    radius = 10000  # in meters
-    offset = 0
+def read_search_list(search_list):
+    search_and_location = []
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-q', '--term', dest='term', default=default_term, type=str,
-                        help='Search term (default: %(default)s)')
-    parser.add_argument('-l', '--location', dest='location', default=default_location, type=str,
-                        help='Search location (default: %(default)s)')
-    input_values = parser.parse_args()
+    with open(csv_folder + search_list + '.csv', 'r') as f:
+        next(f)
+        for line in f:
+            line = line.strip()
+            line = line.split("|")
+            search_and_location.append([line[0], line[1]])
 
-    try:
-        yelp_search = YelpFusion(input_values.term, input_values.location, radius, offset)
-        yelp_search.query_api()
-    except HTTPError as error:
-        sys.exit(
-            'Encountered HTTP error {0} on {1}:\n {2}\nAbort program.'.format(
-                error.code,
-                error.url,
-                error.read(),
-            )
-        )
+    return search_and_location
 
 
 if __name__ == '__main__':
-    main()
+    radius = 40000  # in meters
+    counter = 1
+    offset = 0
 
-# TODO
-# add more columns
-# parser for all params
-# add date to csv output
+    searches = read_search_list("med_spa")
+    for search in searches:
+        try:
+            count_search = YelpFusion(search[0], search[1], radius, 0)
+            query_count = count_search.query_api_count()
+            while counter <= query_count:
+                result_search = YelpFusion(search[0], search[1], radius, offset)
+                result_search.query_api()
+                counter += 1
+                offset += 50
+        except HTTPError as error:
+            sys.exit(
+                'Encountered HTTP error {0} on {1}:\n {2}\nAbort program.'.format(
+                    error.code,
+                    error.url,
+                    error.read(),
+                )
+            )
