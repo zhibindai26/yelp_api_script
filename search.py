@@ -10,7 +10,27 @@ from urllib.error import HTTPError
 from urllib.parse import quote
 import configparser
 import pandas as pd
-from constants import *
+
+# CONSTANTS
+CONFIG_FILE = "config.ini"
+
+RADIUS = 40000  # in meters
+COUNTER = 1
+OFFSET = 0
+
+API_HOST = 'https://api.yelp.com'
+SEARCH_PATH = '/v3/businesses/search'
+BUSINESS_PATH = '/v3/businesses/'  # Business ID will come after slash
+
+DF_COLUMNS = [
+    'name',
+    'url',
+    'categories',
+    'location',
+    'rating',
+    'review_count',
+    'display_phone'
+]
 
 config = configparser.ConfigParser()
 config.read(CONFIG_FILE)
