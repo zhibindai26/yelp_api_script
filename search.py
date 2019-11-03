@@ -81,17 +81,17 @@ class YelpFusion:
         # filter to get needed columns
         selected_cols = df[DF_COLUMNS]
 
-        a = selected_cols.copy()
+        address_df = selected_cols.copy()
 
         # parse location data
-        a['Address'] = a.loc[:, 'location'].apply(lambda x: x.get('display_address'))
+        address_df['Address'] = address_df.loc[:, 'location'].apply(lambda x: x.get('display_address'))
 
-        y = a.copy()
+        final_addr_df = address_df.copy()
 
-        y['Address1'] = y.loc[:, 'Address'].apply(lambda x: self.__list_to_str(x))
+        final_addr_df['Address1'] = final_addr_df.loc[:, 'Address'].apply(lambda x: self.__list_to_str(x))
 
         # remove redundant address cols
-        final_df = y.drop(['location', 'Address'], axis=1)
+        final_df = final_addr_df.drop(['location', 'Address'], axis=1)
 
         self.__write_csv(final_df)
 
