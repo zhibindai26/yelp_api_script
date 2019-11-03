@@ -71,7 +71,9 @@ class YelpFusion:
             print(f'No businesses for {self.term} in {self.location} found.')
             return None
 
-        self.__convert_to_df(businesses)
+        business_data = self.__convert_to_df(businesses)
+
+        self.__write_csv(business_data)
 
     def __convert_to_df(self, dict_to_convert):
 
@@ -93,11 +95,11 @@ class YelpFusion:
         # remove redundant address cols
         final_df = final_addr_df.drop(['location', 'Address'], axis=1)
 
-        self.__write_csv(final_df)
+        return final_df
 
     @staticmethod
-    def __list_to_str(list):
-        return " ".join(list)
+    def __list_to_str(ls):
+        return " ".join(ls)
 
     def __write_csv(self, df):
 
