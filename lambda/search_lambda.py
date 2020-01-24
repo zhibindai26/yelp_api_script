@@ -116,14 +116,19 @@ def get_yelp_results(event, context):
     offset = 0
 
     results_list = []
-    count_search = YelpFusion(api_key, search_term, zip_code, radius, offset)
-    query_count = count_search.query_api_count()
+    yelp_search = YelpFusion(api_key, search_term, zip_code, radius, offset)
+    query_count = yelp_search.query_api_count()
 
     while count <= query_count:
-        result_search = YelpFusion(api_key, search_term, zip_code, radius, offset)
-        result_set = result_search.query_api()
+        result_set = yelp_search.query_api()
         count += 1
         offset += 50
         for result in result_set:
             results_list.append(result)
-    return json.dumps(results_list)
+
+    body = json.dumps(results_list)
+
+    response_obj = {}
+    response_obj['statusCode'] = 200
+    response_obj['body'] = body
+    return response_obj
