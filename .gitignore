@@ -5,3 +5,5 @@ config.ini
 *.spec
 build/
 dist/
+lambda/
+!lambda/search_lambda.py
