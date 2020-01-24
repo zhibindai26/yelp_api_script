@@ -1,7 +1,7 @@
 __pycache__
 config.ini
 .idea/
-csv/*.csv
+.vscode
 *.spec
 build/
 dist/
