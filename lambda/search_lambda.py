@@ -108,10 +108,11 @@ class YelpFusion:
 
 
 def get_yelp_results(event, context):
-    search_term = event["search_term"]
-    zip_code = event["zip_code"]
-    api_key = event["api_key"]
-    radius = float(event["radius"]) * 1609 # miles ==> meters
+    search_term = event["query"]
+    zip_code = event["zip"]
+    api_key = event["yelp_key"]
+    radius_input = int(event["radius"]) * 1609
+    radius = radius_input if radius_input < 40000 else 40000 # miles ==> meters
     count = 1
     offset = 0
 
