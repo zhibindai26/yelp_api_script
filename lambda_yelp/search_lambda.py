@@ -127,8 +127,6 @@ def get_yelp_results(event, context):
         for result in result_set:
             results_list.append(result)
 
-    # body = json.dumps(results_list)
-
     response_obj = {}
     response_obj['statusCode'] = 200
     response_obj['body'] = results_list

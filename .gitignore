@@ -3,7 +3,5 @@ config.ini
 .idea/
 .vscode
 *.spec
-build/
-dist/
-lambda/
-!lambda/search_lambda.py
+lambda_yelp/*
+!lambda_yelp/search_lambda.py
