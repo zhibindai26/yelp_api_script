@@ -122,8 +122,8 @@ def get_yelp_results(event, context):
 
     while count <= query_count:
         result_set = yelp_search.query_api()
+        yelp_search.offset += 50
         count += 1
-        offset += 50
         for result in result_set:
             results_list.append(result)
 
